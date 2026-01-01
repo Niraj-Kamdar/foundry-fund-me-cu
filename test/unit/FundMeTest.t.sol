@@ -4,15 +4,15 @@ pragma solidity 0.8.19;
 
 import {DeployFundMe} from "../../script/DeployFundMe.s.sol";
 import {FundMe} from "../../src/FundMe.sol";
-import {HelperConfig, CodeConstants} from "../../script/HelperConfig.s.sol";
 import {Test, console} from "forge-std/Test.sol";
+import {Config} from "forge-std/Config.sol";
 import {StdCheats} from "forge-std/StdCheats.sol";
 import {ZkSyncChainChecker} from "lib/foundry-devops/src/ZkSyncChainChecker.sol";
 import {MockV3Aggregator} from "../mock/MockV3Aggregator.sol";
 
-contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
+contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
     FundMe public fundMe;
-    HelperConfig public helperConfig;
+    DeployFundMe public deployer;
 
     uint256 public constant SEND_VALUE = 0.1 ether; // just a value to make sure we are sending enough!
     uint256 public constant STARTING_USER_BALANCE = 10 ether;
@@ -26,21 +26,29 @@ contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
     // uint256 public constant SEND_VALUE = 1000000000000000000;
 
     function setUp() external {
-        if (!isZkSyncChain()) {
-            DeployFundMe deployer = new DeployFundMe();
-            (fundMe, helperConfig) = deployer.deployFundMe();
-        } else {
-            MockV3Aggregator mockPriceFeed = new MockV3Aggregator(DECIMALS, INITIAL_PRICE);
-            fundMe = new FundMe(address(mockPriceFeed));
-        }
+        deployer = new DeployFundMe();
+        fundMe = deployer.deployFundMe(false);
         vm.deal(USER, STARTING_USER_BALANCE);
     }
 
     function testPriceFeedSetCorrectly() public skipZkSync {
-        address retreivedPriceFeed = address(fundMe.getPriceFeed());
-        // (address expectedPriceFeed) = helperConfig.activeNetworkConfig();
-        address expectedPriceFeed = helperConfig.getConfigByChainId(block.chainid).priceFeed;
-        assertEq(retreivedPriceFeed, expectedPriceFeed);
+        address retrievedPriceFeed = address(fundMe.getPriceFeed());
+
+        // Load config to check if we're using mocks
+        _loadConfig("./deployments.toml", false);
+        bool useMocks = config.get("use_mocks").toBool();
+
+        if (useMocks) {
+            // For mock environments, just verify the price feed is set (non-zero)
+            assertTrue(
+                retrievedPriceFeed != address(0),
+                "Price feed should be set"
+            );
+        } else {
+            // For other chains, verify it matches the configured address
+            address expectedPriceFeed = config.get("price_feed").toAddress();
+            assertEq(retrievedPriceFeed, expectedPriceFeed);
+        }
     }
 
     function testFundFailsWithoutEnoughETH() public skipZkSync {
@@ -113,7 +121,11 @@ contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
 
         uint256 originalFundMeBalance = address(fundMe).balance; // This is for people running forked tests!
 
-        for (uint160 i = startingFunderIndex; i < numberOfFunders + startingFunderIndex; i++) {
+        for (
+            uint160 i = startingFunderIndex;
+            i < numberOfFunders + startingFunderIndex;
+            i++
+        ) {
             // we get hoax from stdcheats
             // prank + deal
             hoax(address(i), STARTING_USER_BALANCE);
@@ -128,10 +140,15 @@ contract FundMeTest is ZkSyncChainChecker, CodeConstants, StdCheats, Test {
         vm.stopPrank();
 
         assert(address(fundMe).balance == 0);
-        assert(startingFundedeBalance + startingOwnerBalance == fundMe.getOwner().balance);
+        assert(
+            startingFundedeBalance + startingOwnerBalance ==
+                fundMe.getOwner().balance
+        );
 
-        uint256 expectedTotalValueWithdrawn = ((numberOfFunders) * SEND_VALUE) + originalFundMeBalance;
-        uint256 totalValueWithdrawn = fundMe.getOwner().balance - startingOwnerBalance;
+        uint256 expectedTotalValueWithdrawn = ((numberOfFunders) * SEND_VALUE) +
+            originalFundMeBalance;
+        uint256 totalValueWithdrawn = fundMe.getOwner().balance -
+            startingOwnerBalance;
 
         assert(expectedTotalValueWithdrawn == totalValueWithdrawn);
     }

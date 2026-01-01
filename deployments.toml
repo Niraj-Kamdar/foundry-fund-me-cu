@@ -6,15 +6,56 @@
 #
 # See https://github.com/alloy-rs/chains for valid aliases. For new/custom chains, use numeric IDs or consider opening a PR.
 
-[sepolia]
+# ============================================================================
+# ETHEREUM SEPOLIA TESTNET (Numeric Chain ID)
+# ============================================================================
+[11155111]
 endpoint_url = "${SEPOLIA_RPC_URL}"
 
-[sepolia.address]
+[11155111.address]
 price_feed = "0x694AA1769357215DE4FAC081bf1f309aDC325306"
 
+[11155111.bool]
+is_testnet = true
+use_mocks = false
 
-[324]
-endpoint_url = "${ZKSYNC_RPC_URL}"
+# ============================================================================
+# ZKSYNC SEPOLIA TESTNET
+# ============================================================================
+[300]
+endpoint_url = "${ZKSYNC_SEPOLIA_RPC_URL}"
 
-[324.address]
+[300.address]
 price_feed = "0xfEefF7c3fB57d18C5C6Cdd71e45D2D0b4F9377bF"
+
+[300.bool]
+is_testnet = true
+use_mocks = false
+
+# ============================================================================
+# LOCAL ANVIL NETWORK
+# ============================================================================
+[31337]
+endpoint_url = "http://127.0.0.1:8545"
+
+[31337.uint]
+mock_decimals = 8
+mock_initial_price = 200000000000  # 2000e8
+
+[31337.bool]
+is_testnet = true
+use_mocks = true
+
+# ============================================================================
+# LOCAL ZKSYNC ANVIL NETWORK (In-Memory RPC)
+# ============================================================================
+[260]
+endpoint_url = "http://127.0.0.1:8011"
+
+[260.uint]
+mock_decimals = 8
+mock_initial_price = 200000000000  # 2000e8
+
+[260.bool]
+is_testnet = true
+use_mocks = true
