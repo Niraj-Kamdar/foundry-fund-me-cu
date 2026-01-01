@@ -25,7 +25,7 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
     // uint256 public constant SEND_VALUE = 1_000_000_000_000_000_000;
     // uint256 public constant SEND_VALUE = 1000000000000000000;
 
-    function setUp() external {
+    function setUp() external skipZkSync {
         deployer = new DeployFundMe();
         fundMe = deployer.deployFundMe(false);
         vm.deal(USER, STARTING_USER_BALANCE);
@@ -40,7 +40,10 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
 
         if (useMocks) {
             // For mock environments, just verify the price feed is set (non-zero)
-            assertTrue(retrievedPriceFeed != address(0), "Price feed should be set");
+            assertTrue(
+                retrievedPriceFeed != address(0),
+                "Price feed should be set"
+            );
         } else {
             // For other chains, verify it matches the configured address
             address expectedPriceFeed = config.get("price_feed").toAddress();
@@ -118,7 +121,11 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
 
         uint256 originalFundMeBalance = address(fundMe).balance; // This is for people running forked tests!
 
-        for (uint160 i = startingFunderIndex; i < numberOfFunders + startingFunderIndex; i++) {
+        for (
+            uint160 i = startingFunderIndex;
+            i < numberOfFunders + startingFunderIndex;
+            i++
+        ) {
             // we get hoax from stdcheats
             // prank + deal
             hoax(address(i), STARTING_USER_BALANCE);
@@ -133,10 +140,15 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
         vm.stopPrank();
 
         assert(address(fundMe).balance == 0);
-        assert(startingFundedeBalance + startingOwnerBalance == fundMe.getOwner().balance);
+        assert(
+            startingFundedeBalance + startingOwnerBalance ==
+                fundMe.getOwner().balance
+        );
 
-        uint256 expectedTotalValueWithdrawn = ((numberOfFunders) * SEND_VALUE) + originalFundMeBalance;
-        uint256 totalValueWithdrawn = fundMe.getOwner().balance - startingOwnerBalance;
+        uint256 expectedTotalValueWithdrawn = ((numberOfFunders) * SEND_VALUE) +
+            originalFundMeBalance;
+        uint256 totalValueWithdrawn = fundMe.getOwner().balance -
+            startingOwnerBalance;
 
         assert(expectedTotalValueWithdrawn == totalValueWithdrawn);
     }

@@ -20,7 +20,7 @@ update:; forge update
 
 build:; forge build
 
-zkbuild :; forge build --zksync
+zkbuild :; foundryup-zksync && forge build --zksync && foundryup
 
 test :; forge test
 
@@ -46,7 +46,7 @@ endif
 deploy-sepolia:
 	@forge script script/DeployFundMe.s.sol:DeployFundMe $(NETWORK_ARGS)
 
-# As of writing, the Alchemy zkSync RPC URL is not working correctly 
+# As of writing, the Alchemy zkSync RPC URL is not working correctly
 deploy-zk:
 	forge create src/FundMe.sol:FundMe --rpc-url http://127.0.0.1:8011 --private-key $(DEFAULT_ZKSYNC_LOCAL_KEY) --constructor-args $(shell forge create test/mock/MockV3Aggregator.sol:MockV3Aggregator --rpc-url http://127.0.0.1:8011 --private-key $(DEFAULT_ZKSYNC_LOCAL_KEY) --constructor-args 8 200000000000 --legacy --zksync | grep "Deployed to:" | awk '{print $$3}') --legacy --zksync
 
@@ -56,7 +56,7 @@ deploy-zk-sepolia:
 
 # For deploying Interactions.s.sol:FundFundMe as well as for Interactions.s.sol:WithdrawFundMe we have to include a sender's address `--sender <ADDRESS>`
 SENDER_ADDRESS := <sender's address>
- 
+
 fund:
 	@forge script script/Interactions.s.sol:FundFundMe --sender $(SENDER_ADDRESS) $(NETWORK_ARGS)
 
