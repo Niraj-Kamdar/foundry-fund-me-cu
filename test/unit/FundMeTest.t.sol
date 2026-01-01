@@ -27,7 +27,7 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
 
     function setUp() external skipZkSync {
         deployer = new DeployFundMe();
-        fundMe = deployer.deployFundMe(false);
+        fundMe = deployer.deployFundMe();
         vm.deal(USER, STARTING_USER_BALANCE);
     }
 
@@ -83,13 +83,13 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
         _;
     }
 
-    function testOnlyOwnerCanWithdraw() public funded skipZkSync {
+    function testOnlyOwnerCanWithdraw() public skipZkSync funded {
         vm.expectRevert();
         vm.prank(address(3)); // Not the owner
         fundMe.withdraw();
     }
 
-    function testWithdrawFromASingleFunder() public funded skipZkSync {
+    function testWithdrawFromASingleFunder() public skipZkSync funded {
         // Arrange
         uint256 startingFundMeBalance = address(fundMe).balance;
         uint256 startingOwnerBalance = fundMe.getOwner().balance;
@@ -115,7 +115,7 @@ contract FundMeTest is ZkSyncChainChecker, StdCheats, Test, Config {
     }
 
     // Can we do our withdraw function a cheaper way?
-    function testWithdrawFromMultipleFunders() public funded skipZkSync {
+    function testWithdrawFromMultipleFunders() public skipZkSync funded {
         uint160 numberOfFunders = 10;
         uint160 startingFunderIndex = 2 + USER_NUMBER;
 
