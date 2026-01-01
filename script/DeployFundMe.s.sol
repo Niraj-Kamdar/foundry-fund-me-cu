@@ -36,15 +36,10 @@ contract DeployFundMe is Script, Config {
         if (useMocks) {
             // For mock environments, deploy MockV3Aggregator
             uint8 decimals = uint8(config.get("mock_decimals").toUint256());
-            int256 initialPrice = int256(
-                config.get("mock_initial_price").toUint256()
-            );
+            int256 initialPrice = int256(config.get("mock_initial_price").toUint256());
 
             vm.startBroadcast();
-            MockV3Aggregator mock = new MockV3Aggregator(
-                decimals,
-                initialPrice
-            );
+            MockV3Aggregator mock = new MockV3Aggregator(decimals, initialPrice);
             vm.stopBroadcast();
 
             // Write the deployed mock address back to config if write-back is enabled
