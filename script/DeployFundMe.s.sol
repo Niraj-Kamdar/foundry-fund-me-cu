@@ -3,7 +3,6 @@ pragma solidity ^0.8.19;
 
 import {Script} from "forge-std/Script.sol";
 import {Config} from "forge-std/Config.sol";
-import {Variable} from "forge-std/LibVariable.sol";
 import {FundMe} from "../src/FundMe.sol";
 import {MockV3Aggregator} from "../test/mock/MockV3Aggregator.sol";
 
@@ -36,10 +35,15 @@ contract DeployFundMe is Script, Config {
         if (useMocks) {
             // For mock environments, deploy MockV3Aggregator
             uint8 decimals = uint8(config.get("mock_decimals").toUint256());
-            int256 initialPrice = int256(config.get("mock_initial_price").toUint256());
+            int256 initialPrice = int256(
+                config.get("mock_initial_price").toUint256()
+            );
 
             vm.startBroadcast();
-            MockV3Aggregator mock = new MockV3Aggregator(decimals, initialPrice);
+            MockV3Aggregator mock = new MockV3Aggregator(
+                decimals,
+                initialPrice
+            );
             vm.stopBroadcast();
 
             // Write the deployed mock address back to config if write-back is enabled
